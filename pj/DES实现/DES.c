@@ -83,24 +83,25 @@ char KEY_Shift[16] =
 char M[64] = {1, 1, 1, 1, 1, 1, 1, 1,
 			  1, 1, 1, 1, 1, 1, 1, 1,
 			  1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1, 1, 1, 1, 1,
+			  1, 1, 1, 0, 1, 1, 1, 1,
+			  1, 1, 1, 1, 0, 1, 1, 1,
+			  1, 1, 1, 1, 1, 0, 1, 1,
+			  1, 1, 1, 1, 1, 0, 1, 1,
 			  1, 1, 1, 1, 1, 1, 1, 1};
 
-char K[64] = {0, 1, 1, 1, 1, 1, 1, 1,
+char K[64] = {1, 1, 1, 1, 1, 1, 1, 1,
+			  1, 1, 1, 0, 1, 1, 1, 1,
+			  1, 1, 0, 1, 1, 0, 1, 1,
 			  1, 1, 1, 1, 1, 1, 1, 1,
+			  1, 1, 1, 1, 1, 0, 1, 1,
 			  1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1, 1, 1, 1, 0,
-			  1, 1, 1, 1, 1, 1, 1, 1,
-			  1, 1, 1, 1, 0, 1, 1, 1,
-			  1, 1, 1, 1, 1, 1, 1, 1,
+			  1, 1, 0, 1, 1, 1, 1, 1,
 			  1, 1, 1, 1, 1, 1, 1, 1};
 
 void print(char *m, int size)
 { // 测试函数
-	for (int i = 0; i < size; ++i)
+	int i;
+	for (i = 0; i < size; ++i)
 	{
 		printf("%d ", m[i]);
 	}
@@ -116,8 +117,8 @@ void keyInit(char K[], char key[])
 	{
 		key[i] = K[PC1_Table[i] - 1];
 	}
-	print(key, 56);
-	printf("keyInit~~~\n\n");
+	// print(key, 56);
+	// printf("keyInit~~~\n\n");
 }
 
 void keyShift(char key[], int shiftL)
@@ -166,11 +167,12 @@ void keyOut(char key[], char keyi[])
 }
 
 void keyfun()
-{
+{ // 用来生成密钥的函数
 	char key[56];
 	char keyi[48];
 	keyInit(K, key);
-	for (int i = 0; i < 16; ++i)
+	int i;
+	for (i = 0; i < 16; ++i)
 	{
 		keyShift(key, KEY_Shift[i]);
 		keyOut(key, keyi);
@@ -178,8 +180,177 @@ void keyfun()
 	}
 }
 
+void DES_Encryption(char input[64], char output[64])
+{
+
+	int i, j, k;
+	char L[32], R[32], tmpL[32], tmpR[32]; //记录各轮的左32位和右边32位
+	char key[56];						   // 输入的密钥进行初始置换的结果
+	char keyi[48];						   // 各轮密钥存放的数组
+
+	char Extend[48]; // 临时存放扩展置换后的矩阵
+	char S_out[32];	 // S盒代替后的输出矩阵
+
+	char merge[64]; //最后合并L R 两个数组
+
+	//明文输入后的初始置换,直接利用L和R数组存放置换矩阵置换的结果
+	for (i = 0; i < 32; ++i)
+		L[i] = input[IP_Table[i] - 1];
+	for (i = 32; i < 64; ++i)
+		R[i - 32] = input[IP_Table[i] - 1];
+
+	keyInit(K, key); //初始化密钥
+
+	for (i = 0; i < 16; ++i)
+	{ // 16轮加密
+		// printf("第%d轮",i);
+		for (j = 0; j < 32; ++j)
+		{ // 先把数据存放到临时数组中
+			tmpL[j] = L[j];
+			tmpR[j] = R[j];
+		}
+
+		for (j = 0; j < 32; ++j)
+		{ // 右边数组移动到左边数组
+			L[j] = tmpR[j];
+		}
+
+		keyShift(key, KEY_Shift[i]);
+		keyOut(key, keyi); //将该轮密钥存放在keyi中
+		// printf("密钥%d\n",i);
+		// print(keyi,48);
+
+		for (j = 0; j < 48; ++j)
+		{ // 扩展置换 + 与密钥异或
+			Extend[j] = R[E_Table[j] - 1] ^ keyi[j];
+		}
+
+		// S盒替代 最为复杂
+		for (j = 0; j < 8; ++j)
+		{
+			int num = S_Box[j]
+						   [Extend[j * 6] + Extend[j * 6 + 5]]
+						   [Extend[j * 6 + 1] + Extend[j * 6 + 2] + Extend[j * 6 + 3] + Extend[j * 6 + 4]];
+			for (k = 3; k >= 0; --k)
+			{
+				S_out[(j << 2) + k] = num & 1;
+				num >>= 1;
+			}
+		}
+
+		//P 盒置换
+		for (j = 0; j < 32; ++j)
+		{ // P盒子置换 + 与L异或
+			R[j] = S_out[P_Table[j] - 1] ^ tmpL[j];
+		}
+	}
+
+	// 进行R L 两个数组合并
+	for (i = 0; i < 32; ++i)
+		merge[i] = R[i];
+	for (i = 32; i < 64; ++i)
+		merge[i] = L[i - 32];
+
+	// 16轮完成进行逆置换并输出
+	for (i = 0; i < 64; ++i)
+	{
+		output[i] = merge[IPR_Table[i] - 1];
+	}
+}
+
+void DES_Decrypt(char input[64], char output[64])
+{
+	int i, j, k;
+	char L[32], R[32], tmpL[32], tmpR[32]; //记录各轮的左32位和右边32位
+	char key[56];						   // 输入的密钥进行初始置换的结果
+	char keyi[16][48];					   // 各轮密钥存放的数组
+
+	char Extend[48]; // 临时存放扩展置换后的矩阵
+	char S_out[32];	 // S盒代替后的输出矩阵
+
+	char merge[64]; //最后合并L R 两个数组
+
+	//明文输入后的初始置换,直接利用L和R数组存放置换矩阵置换的结果
+	for (i = 0; i < 32; ++i)
+		L[i] = input[IP_Table[i] - 1];
+	for (i = 32; i < 64; ++i)
+		R[i - 32] = input[IP_Table[i] - 1];
+
+	keyInit(K, key); //初始化密钥
+	for (int i = 0; i < 16; ++i)
+	{
+		keyShift(key, KEY_Shift[i]);
+		keyOut(key, keyi[i]); //将该轮密钥存放在keyi中
+							  // printf("密钥%d\n",i);
+							  // print(keyi[i],48);
+	}
+
+	for (i = 15; i >= 0; --i)
+	{ // 16轮加密
+		// printf("第%d轮",i);
+		for (j = 0; j < 32; ++j)
+		{ // 先把数据存放到临时数组中
+			tmpL[j] = L[j];
+			tmpR[j] = R[j];
+		}
+
+		for (j = 0; j < 32; ++j)
+		{ // 右边数组移动到左边数组
+			L[j] = tmpR[j];
+		}
+
+		for (j = 0; j < 48; ++j)
+		{ // 扩展置换 + 与密钥异或
+			Extend[j] = R[E_Table[j] - 1] ^ keyi[i][j];
+		}
+
+		// S盒替代 最为复杂
+		for (j = 0; j < 8; ++j)
+		{
+			int num = S_Box[j]
+						   [Extend[j * 6] + Extend[j * 6 + 5]]
+						   [Extend[j * 6 + 1] + Extend[j * 6 + 2] + Extend[j * 6 + 3] + Extend[j * 6 + 4]];
+			for (k = 3; k >= 0; --k)
+			{
+				S_out[(j << 2) + k] = num & 1;
+				num >>= 1;
+			}
+		}
+
+		//P 盒置换
+		for (j = 0; j < 32; ++j)
+		{ // P盒子置换 + 与L异或
+			R[j] = S_out[P_Table[j] - 1] ^ tmpL[j];
+		}
+	}
+
+	// 进行R L 两个数组合并
+	for (i = 0; i < 32; ++i)
+		merge[i] = R[i];
+	for (i = 32; i < 64; ++i)
+		merge[i] = L[i - 32];
+
+	// 16轮完成进行逆置换并输出
+	for (i = 0; i < 64; ++i)
+	{
+		output[i] = merge[IPR_Table[i] - 1];
+	}
+}
+
 int main()
 {
-	keyfun();
+	// keyfun();
+	char output[64] = {0};
+	char origin[64] = {0};
+	printf("原文：\n");
+	print(M, 64);
+
+	DES_Encryption(M, output);
+	printf("加密后:\n");
+	print(output, 64);
+	DES_Decrypt(output, origin);
+	printf("解密后:\n");
+	print(origin, 64);
+
 	return 0;
 }
