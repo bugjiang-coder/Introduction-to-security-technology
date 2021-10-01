@@ -98,6 +98,13 @@ char K[64] = {1, 1, 1, 1, 1, 1, 1, 1,
 			  1, 1, 0, 1, 1, 1, 1, 1,
 			  1, 1, 1, 1, 1, 1, 1, 1};
 
+void keyInit(char K[], char key[]);
+void keyShift(char key[], int shiftL);
+void keyOut(char key[], char keyi[]);
+void DES_Operation(char input[64], char output[64], char keys[16][48]);
+void DES_Encrypt(char input[64], char output[64], char SecretKey[64]);
+void DES_Decrypt(char input[64], char output[64], char SecretKey[64]);
+
 void print(char *m, int size)
 { // 测试函数
 	int i;
@@ -166,20 +173,6 @@ void keyOut(char key[], char keyi[])
 	}
 }
 
-void keyfun()
-{ // 用来生成密钥的测试函数
-	char key[56];
-	char keyi[48];
-	keyInit(K, key);
-	int i;
-	for (i = 0; i < 16; ++i)
-	{
-		keyShift(key, KEY_Shift[i]);
-		keyOut(key, keyi);
-		print(keyi, 48);
-	}
-}
-
 void DES_Operation(char input[64], char output[64], char keys[16][48])
 { //由于加密和解密的过程是完全相同的所以这里单独提出一个过程
 	int i, j, k;
@@ -196,7 +189,7 @@ void DES_Operation(char input[64], char output[64], char keys[16][48])
 	for (i = 32; i < 64; ++i)
 		R[i - 32] = input[IP_Table[i] - 1];
 
-	for (i = 0; i < 16; --i)
+	for (i = 0; i < 16; ++i)
 	{ // 16轮运算
 		for (j = 0; j < 32; ++j)
 		{ // 先把数据存放到临时数组中
@@ -247,11 +240,11 @@ void DES_Operation(char input[64], char output[64], char keys[16][48])
 	}
 }
 
-void DES_Encrypt(char input[64], char output[64])
+void DES_Encrypt(char input[64], char output[64],char SecretKey[64])
 {
-	char key[56];  // 输入的密钥进行初始置换的结果
+	char key[56];	   // 输入的密钥进行初始置换的结果
 	char keys[16][48]; // 各轮密钥存放的数组
-	keyInit(K, key); //初始化密钥
+	keyInit(SecretKey, key);   //初始化密钥
 	for (int i = 0; i < 16; ++i)
 	{
 		keyShift(key, KEY_Shift[i]);
@@ -259,21 +252,47 @@ void DES_Encrypt(char input[64], char output[64])
 							  // printf("密钥%d\n",i);
 							  // print(keyi[i],48);
 	}
-	DES_Operation(input,output,keys);
-
+	DES_Operation(input, output, keys);
 }
 
-void DES_Decrypt(char input[64], char output[64])
+void DES_Decrypt(char input[64], char output[64], char SecretKey[64])
 {
-	char key[56];  // 输入的密钥进行初始置换的结果
+	char key[56];	   // 输入的密钥进行初始置换的结果
 	char keys[16][48]; // 各轮密钥存放的数组
-	keyInit(K, key); //初始化密钥
+	keyInit(SecretKey, key);   //初始化密钥
 	for (int i = 0; i < 16; ++i)
 	{
 		keyShift(key, KEY_Shift[i]);
-		keyOut(key, keys[16 - i]); //将该轮密钥倒叙存放在keys中
+		keyOut(key, keys[15 - i]); //将该轮密钥倒叙存放在keys中
 	}
-	DES_Operation(input,output,keys);
+	DES_Operation(input, output, keys);
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//上面的部分可以单独 作为一个库来使用  下面是实现字符串加密的部分
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+void Char8ToBit64(char ch[8], char bit[64])
+{
+	int i, j;
+	for (i = 0; i < 8; ++i)
+		for (j = 0; j < 8; ++j)
+			*(bit + (i << 3) + j) = (*(ch + i) >> j) & 1;
+	return;
+}
+
+void Bit64ToChar8(char bit[64], char ch[8])
+{
+	int i, j;
+	for (i = 0; i < 8; ++i)
+		for (j = 0; j < 8; ++j)
+			*(ch + i) += *(bit + (i << 3) + j) << j;
+
+	return;
 }
 
 int main()
@@ -281,15 +300,33 @@ int main()
 	// keyfun();
 	char output[64] = {0};
 	char origin[64] = {0};
-	printf("原文：\n");
-	print(M, 64);
+	char massage[64] = {0};
+	char out[8] = {0};
+	char out1[8] = {0};
 
-	DES_Encrypt(M, output);
+	Char8ToBit64("yangjirui", massage);
+	Char8ToBit64("11111111", K);
+
+
+	printf("原文：\n");
+	print(massage, 64);
+	for (int i = 0; i < 8; ++i)
+		printf("%c ", massage[i]);
+
+	DES_Encrypt(massage, output, K);
 	printf("加密后:\n");
 	print(output, 64);
-	DES_Decrypt(output, origin);
+	Bit64ToChar8(output, out);
+	for (int i = 0; i < 8; ++i)
+		printf("%c ", out[i]);
+
+	DES_Decrypt(output, origin, K);
 	printf("解密后:\n");
 	print(origin, 64);
+
+	Bit64ToChar8(origin, out1);
+	for (int i = 0; i < 8; ++i)
+		printf("%c", out1[i]);
 
 	return 0;
 }
