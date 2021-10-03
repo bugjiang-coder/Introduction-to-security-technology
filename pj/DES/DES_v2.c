@@ -328,15 +328,25 @@ int encrypt(char *originFile, char *keyStr, char *encryptedFile)
 		return -1;
 
 	memcpy(keyBlock, keyStr, 8);
+	// printf("key:\n");
+	// print(keyBlock, 8);
 
 	Char8ToBit64(keyBlock, key);
 	initEncryptKey(key, keys);
+
+	// printf("key:\n");
+	// print(keys, 768);
 
 	while (!feof(origin))
 	{
 		if ((cnt = fread(originBlock, sizeof(char), 8, origin)) == 8)
 		{
 			DES_Encrypt(originBlock, encryptedBlock, keys);
+			// printf("originBlock:\n");
+			// printc(originBlock, 8);
+
+			// printf("encryptedBlock:\n");
+			// printc(encryptedBlock, 8);
 			fwrite(encryptedBlock, sizeof(char), 8, encrypted);
 		}
 	}
@@ -370,6 +380,10 @@ int decrypt(char *originFile, char *keyStr, char *decryptedFile)
 	memcpy(keyBlock, keyStr, 8);
 	Char8ToBit64(keyBlock, key);
 	initDecryptKey(key, keys);
+	// printf("key:\n");
+	// print(keyBlock, 8);
+	// printf("key:\n");
+	// print(keys, 768);
 
 	fseek(origin, 0, SEEK_END);
 	fileLen = ftell(origin);
@@ -379,6 +393,11 @@ int decrypt(char *originFile, char *keyStr, char *decryptedFile)
 	{
 		fread(originBlock, sizeof(char), 8, origin);
 		DES_Decrypt(originBlock, decryptedBlock, keys);
+		// printf("###originBlock:\n");
+		// print(originBlock, 64);
+
+		// printf("###decryptedBlock:\n");
+		// print(decryptedBlock, 64);
 		cnt += 8;
 		if (cnt < fileLen)
 			fwrite(decryptedBlock, sizeof(char), 8, decrypted);
@@ -412,7 +431,26 @@ int decrypt(char *originFile, char *keyStr, char *decryptedFile)
 
 int main()
 {
-	encrypt("1.txt", "key1txt", "2.txt");
-	decrypt("2.txt", "key1txt", "3.txt");
+	char originBlock[8], encryptedBlock[8], decryptedBlock[8], keyBlock[8];
+	char key[64];
+	char keys[16][48];
+	char keysi[16][48];
+
+	memcpy(keyBlock, "key1txt", 8);
+	Char8ToBit64(keyBlock, key);
+	initDecryptKey(key, keys);
+	initEncryptKey(key, keysi);
+	// encrypt("1.txt", "key1txt", "2.txt");
+	// system("pause");
+	// decrypt("2.txt", "key1txt", "3.txt");
+	memcpy(originBlock, "yangjirui", 8);
+
+	DES_Encrypt(originBlock, encryptedBlock, keysi);
+	DES_Encrypt(encryptedBlock, decryptedBlock, keys);
+	printc(keyBlock, 8);
+	printc(originBlock, 8);
+	printc(encryptedBlock, 8);
+	printc(decryptedBlock, 8);
+
 	return 0;
 }
