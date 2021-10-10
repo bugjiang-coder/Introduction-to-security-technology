@@ -412,7 +412,7 @@ int decrypt(char *originFile, char *keyStr, char *decryptedFile)
 
 int main()
 {
-	encrypt("1.txt", "key1txt", "2.txt");
-	decrypt("2.txt", "key1txt", "3.txt");
+	encrypt("1.txt", "text", "1outOrigin.txt");
+	decrypt("1outOrigin.txt", "text", "3.txt");
 	return 0;
 }
