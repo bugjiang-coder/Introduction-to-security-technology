@@ -1,0 +1,30 @@
+# Windows:
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.exe
+*.dll
+# ----
+debug
+*.qm
+build-DES-Desktop_Qt_5_12_2_MinGW_32_bit-Debug
+build-DES-Desktop_Qt_5_12_2_MinGW_32_bit-Release
+qt_reference
+DES加解密程序
+
+# Python:
+*.py[cod]
+*.so
+*.egg
+*.egg-info
+dist
+build
+
+# My configurations:
+db.ini
+deploy_key_rsa
+
+# other
+*.rar
+*.vs
+
