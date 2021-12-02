@@ -48,7 +48,7 @@ class ROLE
     // private:
 public:
     ROLE *parentROLE;       // 这个用于定义继承 利用指针来继承
-    vector<PERMISSION *> childROLE;    // 树形结构 总共只有5类权限所以只定义了16
+    vector<ROLE *> childROLE;    // 树形结构 
     // int nextFreeChild;      // 下一个空子角色
     vector<PERMISSION *> p; //该role所拥有的权限
     ROLE(int id, const char *name);
@@ -83,20 +83,20 @@ private:
 public:
     void addROLE(int id, const char *name);
     void printList(void);
-    int addPERMISSION(int id, PERMISSION *permision)
-    {
-        // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
-        for (auto i = roleList.begin(); i != roleList.end(); i++)
-        {
-            if ((*i)->r_ID == id)
-            {
-                (*i)->p.push_back(permision);
-                return 0;
-            }
-        }
-        // 没有该role
-        return 1;
-    }
+    int addPERMISSION(int id, PERMISSION *permision);
+    // {
+    //     // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
+    //     for (auto i = roleList.begin(); i != roleList.end(); i++)
+    //     {
+    //         if ((*i)->r_ID == id)
+    //         {
+    //             (*i)->p.push_back(permision);
+    //             return 0;
+    //         }
+    //     }
+    //     // 没有该role
+    //     return 1;
+    // }
 
     int addChildROLE(int P_id,int id, const char *name){
         // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
@@ -143,6 +143,20 @@ void RoleManager::printList()
 
     }
 }
+int RoleManager::addPERMISSION(int id, PERMISSION *permision)
+    {
+        // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
+        for (auto i = roleList.begin(); i != roleList.end(); i++)
+        {
+            if ((*i)->r_ID == id)
+            {
+                (*i)->p.push_back(permision);
+                return 0;
+            }
+        }
+        // 没有该role
+        return 1;
+    }
 
 // int RoleManger::addPERMISSION(int id, PERMISSION *permision)
 // {
@@ -235,6 +249,8 @@ int main()
 
     // 下一步认为 在没有ROLE类中 定义域 权限表，每个role中都要包含权限
     // 用vector    完成
+
+    // 发现一个惊天大问题，小电脑上的c++编译器有问题！！
 
     // 定义子继承
 
