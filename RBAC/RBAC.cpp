@@ -47,9 +47,10 @@ class ROLE
 {
     // private:
 public:
-    ROLE *parentROLE;    // 这个用于定义继承 利用指针来继承
-    ROLE *childROLE[16]; // 树形结构 总共只有5类权限所以只定义了16
-    int nextFreeChild;   // 下一个空子角色
+    ROLE *parentROLE;       // 这个用于定义继承 利用指针来继承
+    vector<PERMISSION *> childROLE;    // 树形结构 总共只有5类权限所以只定义了16
+    // int nextFreeChild;      // 下一个空子角色
+    vector<PERMISSION *> p; //该role所拥有的权限
     ROLE(int id, const char *name);
 
     int r_ID;
@@ -82,6 +83,44 @@ private:
 public:
     void addROLE(int id, const char *name);
     void printList(void);
+    int addPERMISSION(int id, PERMISSION *permision)
+    {
+        // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
+        for (auto i = roleList.begin(); i != roleList.end(); i++)
+        {
+            if ((*i)->r_ID == id)
+            {
+                (*i)->p.push_back(permision);
+                return 0;
+            }
+        }
+        // 没有该role
+        return 1;
+    }
+
+    int addChildROLE(int P_id,int id, const char *name){
+        // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
+        for (auto i = roleList.begin(); i != roleList.end(); i++)
+        {
+            if ((*i)->r_ID == P_id)
+            {
+                ROLE *r = new ROLE(id, name);
+                r->parentROLE = *i;
+                roleList.push_back(r);
+                (*i)->childROLE.push_back(r);
+                return 0;
+            }
+        }
+        // 没有该role
+        return 1;
+
+    }
+
+    void printParentROLE(){
+        // 递归打印 父role 的权限
+
+    }
+
 
 };
 
@@ -96,8 +135,29 @@ void RoleManager::printList()
     for (auto i = roleList.begin(); i != roleList.end(); i++)
     {
         (*i)->show();
+        for (auto j = (*i)->p.begin(); j != (*i)->p.end(); ++j)
+        {
+            cout << '\t';
+            (*j)->show();
+        }
+
     }
 }
+
+// int RoleManger::addPERMISSION(int id, PERMISSION *permision)
+// {
+//     // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
+//     for (auto i = roleList.begin(); i != roleList.end(); i++)
+//     {
+//         if ((*i)->r_ID == id)
+//         {
+//             (*i)->p.push_back(permision);
+//             return 0;
+//         }
+//     }
+//     // 没有该role
+//     return 1;
+// }
 /*
 // 利用c++的数据STL库定义上面三个元素 的关系
 // 使用一个
@@ -134,11 +194,11 @@ int main()
     A->show();
 
     // 所有角色都要用一个类来表示
-    ROLE *r1 = new ROLE(101, "Project Execution");
-    ROLE *r2 = new ROLE(102, "Project Design");
+    // ROLE *r1 = new ROLE(101, "Project Execution");
+    // ROLE *r2 = new ROLE(102, "Project Design");
 
-    r1->show();
-    r2->show();
+    // r1->show();
+    // r2->show();
 
     // 所有权限
     // 新建     删除    读取    更改	执行
@@ -166,10 +226,17 @@ int main()
     RoleManager roles;
     roles.addROLE(101, "Project Execution");
     roles.addROLE(102, "Project Design");
+    roles.addPERMISSION(101, p3);
+    roles.addPERMISSION(101, p5);
+    roles.addPERMISSION(102, p1);
+    roles.addPERMISSION(102, p4);
+
     roles.printList();
 
     // 下一步认为 在没有ROLE类中 定义域 权限表，每个role中都要包含权限
-    // 用vector
+    // 用vector    完成
+
+    // 定义子继承
 
     // 在roleManager中定义 互斥表，
     // 用map
