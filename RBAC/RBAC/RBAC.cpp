@@ -7,9 +7,7 @@
 using namespace std;
 
 void minShell(vector<PERMISSION *> *Permission_list, RoleManager &roles, UsersManager &users)
-{
-    int userID, permisionID;
-    char buf[64];
+{    
     cout << "有以下可用操作：" << endl;
     for (auto it = Permission_list->begin(); it != Permission_list->end(); ++it)
     {
@@ -18,6 +16,7 @@ void minShell(vector<PERMISSION *> *Permission_list, RoleManager &roles, UsersMa
 
     while(1)
     {
+        int userID, permisionID;
         cout << "请输入您的ID:" << endl;
 
         cin >> userID;

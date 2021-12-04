@@ -102,5 +102,5 @@ bool ROLE::parentPermissionCheck(int permissionID)
         }
     }
 
-    return parentPermissionCheck(permissionID);
+    return parentROLE->parentPermissionCheck(permissionID);
 }
