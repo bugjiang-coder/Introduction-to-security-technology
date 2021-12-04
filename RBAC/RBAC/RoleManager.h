@@ -13,9 +13,10 @@ class RoleManager
 {
 private:
     // 这是一个管理这所有role的列表
-    vector<ROLE *> roleList;
+    vector<ROLE *> *roleList;
 
 public:
+    RoleManager();
     /*------------------------增---------------------------*/
     // 添加一个role
     int addROLE(int id, const char *name);
@@ -34,6 +35,8 @@ public:
     int deletePERMISSION(int id, int permision_id);
 
     /*------------------------查---------------------------*/
+    // 获取role的指针
+    ROLE* getROLE(int roleID);
     // 打印所有role以及其所有的权限
     void printList(void);
 };

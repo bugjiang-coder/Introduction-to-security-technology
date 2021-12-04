@@ -1,9 +1,12 @@
 #include "RoleManager.h"
 using namespace std;
+RoleManager::RoleManager(){
+    roleList = new vector<ROLE *>;
+}
 
 void RoleManager::printList()
 {
-    for (auto i = roleList.begin(); i != roleList.end(); i++)
+    for (auto i = roleList->begin(); i != roleList->end(); i++)
     {
         (*i)->show();
         (*i)->printPERMISSION();
@@ -19,14 +22,14 @@ void RoleManager::printList()
 int RoleManager::addROLE(int id, const char *name)
 {
     ROLE *r = new ROLE(id, name);
-    roleList.push_back(r);
+    roleList->push_back(r);
     return 0;
 }
 
 int RoleManager::addPERMISSION(int id, PERMISSION *permision)
 {
     // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
-    for (auto i = roleList.begin(); i != roleList.end(); i++)
+    for (auto i = roleList->begin(); i != roleList->end(); i++)
     {
         if ((*i)->r_ID == id)
         {
@@ -41,7 +44,7 @@ int RoleManager::addPERMISSION(int id, PERMISSION *permision)
 int RoleManager::deletePERMISSION(int id, int permision_id)
 {
     // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
-    for (auto i = roleList.begin(); i != roleList.end(); i++)
+    for (auto i = roleList->begin(); i != roleList->end(); i++)
     {
         if ((*i)->r_ID == id)
         {
@@ -65,15 +68,17 @@ int RoleManager::deletePERMISSION(int id, int permision_id)
 int RoleManager::addChildROLE(int P_id, int id, const char *name)
 {
     // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
-    for (auto i = roleList.begin(); i != roleList.end(); i++)
+    for (auto i = roleList->begin(); i != roleList->end(); i++)
     {
         if ((*i)->r_ID == P_id)
         {
+            ROLE* parent = (*i);
             ROLE *r = new ROLE(id, name);
-            r->parentROLE = *i;
-            roleList.push_back(r);
+            r->parentROLE = parent;
+            roleList->push_back(r);
+            // 莫名其妙堆栈会把我的（*i)给清除了？
             // 这个错误可能是没有实例化 childROLE 这个vector
-            (*i)->childROLE->push_back(r);
+            parent->childROLE->push_back(r);
             return 0;
         }
     }
@@ -84,7 +89,7 @@ int RoleManager::addChildROLE(int P_id, int id, const char *name)
 int RoleManager::deleteROLE(int id)
 {
     // 通过role的id来索引，如果没有该role则返回1，修改成功返回0
-    for (auto i = roleList.begin(); i != roleList.end(); i++)
+    for (auto i = roleList->begin(); i != roleList->end(); i++)
     {
         if ((*i)->r_ID == id)
         {
@@ -94,10 +99,22 @@ int RoleManager::deleteROLE(int id)
                 (*j)->parentROLE = NULL;
             }
             // 删除该role
-            roleList.erase(i);
+            roleList->erase(i);
             return 0;
         }
     }
     // 没有该role
     return 1;
+}
+
+ROLE *RoleManager::getROLE(int roleID)
+{
+    for (auto i = roleList->begin(); i != roleList->end(); i++)
+    {
+        if ((*i)->r_ID == roleID)
+        {
+            return (*i);
+        }
+    }
+    return NULL;
 }

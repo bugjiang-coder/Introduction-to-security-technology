@@ -6,8 +6,6 @@
 #include <vector>
 using namespace std;
 
-
-
 class PERMISSION
 {
 public:
@@ -17,18 +15,11 @@ public:
     void show();
 };
 
-class USER
-{
-public:
-    USER(int id, const char *name);
-    int u_ID;
-    const char *u_name;
-    void show();
-};
-
 class ROLE
 {
-    // private:
+private:
+    bool parentPermissionCheck(int permissionID);
+
 public:
     ROLE *parentROLE;        // 这个用于定义继承 利用指针来继承
     vector<PERMISSION *> *p; //该role所拥有的权限
@@ -45,6 +36,18 @@ public:
     void printPERMISSION();
     // 递归打印继承的权限
     void printParentPERMISSION();
+    // 判断是否含有该权限
+    bool permissionCheck(int permissionID);
 };
 
+class USER
+{
+public:
+    vector<ROLE *> *ROLEs; // 拥有的role
+    USER(int id, const char *name);
+    int u_ID;
+    const char *u_name;
+    void show();
+    void printROLE();
+};
 #endif
